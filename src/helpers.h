@@ -15,13 +15,12 @@ typedef struct ErrorValue {
   const char *error_message;
 } ErrorValue;
 
-ErrorValue init_array(BaseArray *base, size_t size);
-ErrorValue allocate_array(BaseArray *base);
-ErrorValue push_array(BaseArray *base, void *content, size_t content_size);
-void *get_array(BaseArray *base, int index, ErrorValue *err);
-ErrorValue remove_array(BaseArray *base, int index, int free_memory);
-ErrorValue clear_array(BaseArray *base);
-
+ErrorValue array_init(BaseArray *base, size_t size);
+ErrorValue array_allocate(BaseArray *base);
+ErrorValue array_push(BaseArray *base, void *content);
+void *array_get(BaseArray *base, int index, ErrorValue *err);
+ErrorValue array_remove(BaseArray *base, int index, int free_memory);
+ErrorValue array_clear(BaseArray *base);
 int array_needs_allocation(BaseArray *base);
 
 #endif

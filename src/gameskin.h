@@ -19,15 +19,17 @@ ErrorValue gameskin_copy_part_from(GameSkin *src, GameSkin *dst,
 ErrorValue gameskin_save(GameSkin *gameskin);
 
 ErrorValue gameskin_from_path(const char *path, GameSkin *gameskin);
-ErrorValue gameskin_init_array(BaseArray *base);
-ErrorValue gameskin_push_array(BaseArray *base, GameSkin *gameskin);
-ErrorValue gameskin_push_all_array(BaseArray *base, GameSkin **gameskin,
+ErrorValue gameskin_array_init(BaseArray *base);
+ErrorValue gameskin_array_push(BaseArray *base, GameSkin *gameskin);
+ErrorValue gameskin_array_push_all(BaseArray *base, GameSkin **gameskin,
                                    int count);
-GameSkin *gameskin_get_array(BaseArray *base, int index, ErrorValue *err);
-GameSkin *gameskin_find_array(BaseArray *base, const char *name,
+ErrorValue gameskin_array_remove(BaseArray *base, int index, int free_memory);
+ErrorValue gameskin_array_clear(BaseArray *arr);
+GameSkin *gameskin_array_get(BaseArray *base, int index, ErrorValue *err);
+GameSkin *gameskin_array_find(BaseArray *base, const char *name,
                               ErrorValue *err);
 // just have this to check if it contains a skin rather than going through all
 // the error checks in ReturnValue from find_gameskin_array
-int gameskin_indexof_array(BaseArray *base, const char *name);
+int gameskin_array_indexof(BaseArray *base, const char *name);
 
 #endif

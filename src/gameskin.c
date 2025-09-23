@@ -3,10 +3,11 @@
 #include "helpers.h"
 #include "png_handle.h"
 #include <stddef.h>
+#include <stdlib.h>
 #include <string.h>
 
-ErrorValue gameskin_init_array(BaseArray *base) {
-  return init_array(base, sizeof(GameSkin));
+ErrorValue gameskin_array_init(BaseArray *base) {
+  return array_init(base, sizeof(GameSkin));
 }
 
 ErrorValue gameskin_copy_part_from(GameSkin *src, GameSkin *dst,
@@ -36,26 +37,44 @@ ErrorValue gameskin_from_path(const char *path, GameSkin *gameskin) {
   return (ErrorValue){0};
 }
 
-ErrorValue gameskin_push_array(BaseArray *base, GameSkin *gameskin) {
+ErrorValue gameskin_array_push(BaseArray *base, GameSkin *gameskin) {
   if (base == NULL || gameskin == NULL)
     return (ErrorValue){1, "Either BaseArray or GameSkin is NULL"};
 
-  if (gameskin_indexof_array(base, gameskin->name) != -1)
+  if (gameskin_array_indexof(base, gameskin->name) != -1)
     return (ErrorValue){1, "Gameskin already exists with name"};
 
-  return push_array(base, gameskin, sizeof(*gameskin));
+  return array_push(base, gameskin);
 }
 
-ErrorValue gameskin_push_all_array(BaseArray *base, GameSkin **gameskin,
+ErrorValue gameskin_array_remove(BaseArray *base, int index, int free_memory) {
+  if (free_memory) {
+    GameSkin *s = gameskin_array_get(base, index, NULL);
+    if (s != NULL)
+      free(s->pixels);
+  }
+
+  return array_remove(base, index, free_memory);
+}
+
+ErrorValue gameskin_array_clear(BaseArray *arr) {
+  while (arr->length > 0) {
+    gameskin_array_remove(arr, 0, 1);
+  }
+
+  return (ErrorValue){0};
+}
+
+ErrorValue gameskin_array_push_all(BaseArray *base, GameSkin **gameskin,
                                    int count) {
   if (gameskin == NULL)
-    return (struct ErrorValue){1, "Gameskin array is NULL"};
+    return (ErrorValue){1, "Gameskin array is NULL"};
 
   for (int i = 0; i < count; i++) {
     if (gameskin[i] == NULL)
       return (ErrorValue){1, "Gameskin is NULL"};
 
-    ErrorValue ev = gameskin_push_array(base, gameskin[i]);
+    ErrorValue ev = gameskin_array_push(base, gameskin[i]);
     if (ev.did_error)
       return ev;
   }
@@ -63,9 +82,9 @@ ErrorValue gameskin_push_all_array(BaseArray *base, GameSkin **gameskin,
   return (ErrorValue){0};
 }
 
-int gameskin_indexof_array(BaseArray *base, const char *name) {
+int gameskin_array_indexof(BaseArray *base, const char *name) {
   for (int i = 0; i < base->length; i++) {
-    void *rv = get_array(base, i, NULL);
+    void *rv = array_get(base, i, NULL);
     if (rv == NULL)
       continue;
 
@@ -75,13 +94,13 @@ int gameskin_indexof_array(BaseArray *base, const char *name) {
   return -1;
 }
 
-GameSkin *gameskin_find_array(BaseArray *base, const char *name,
+GameSkin *gameskin_array_find(BaseArray *base, const char *name,
                               ErrorValue *err) {
-  int index = gameskin_indexof_array(base, name);
-  return index == -1 ? NULL : gameskin_get_array(base, index, err);
+  int index = gameskin_array_indexof(base, name);
+  return index == -1 ? NULL : gameskin_array_get(base, index, err);
 }
 
-struct GameSkin *gameskin_get_array(struct BaseArray *base, int index,
+struct GameSkin *gameskin_array_get(BaseArray *base, int index,
                                     ErrorValue *err) {
-  return get_array(base, index, err);
+  return array_get(base, index, err);
 }
