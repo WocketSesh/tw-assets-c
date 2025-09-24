@@ -6,6 +6,8 @@
 #include <string.h>
 
 void get_name_extension(const char *path, char *name, char *extension) {
+  if (name == NULL && extension == NULL)
+    return;
 
   const char *s = strrchr(path, '/');
   const char *bs = strrchr(path, '\\');
@@ -15,19 +17,23 @@ void get_name_extension(const char *path, char *name, char *extension) {
 
   if (dot) {
     size_t name_len = dot - base;
-    strncpy_s(name, 256, base, name_len);
+    if (name != NULL)
+      strncpy_s(name, 256, base, name_len);
 
+    printf("set name?\n");
     name[name_len] = '\0';
 
-    strcpy_s(extension, 256, dot + 1);
+    if (extension != NULL)
+      strcpy_s(extension, 256, dot + 1);
   } else {
-    strcpy_s(name, 256, base);
-    extension[0] = '\0';
+    if (name != NULL)
+      strcpy_s(name, 256, base);
+    if (extension != NULL)
+      extension[0] = '\0';
   }
 }
 
-struct ErrorValue load_png(const char *path, unsigned char **image) {
-  printf("loading png\n");
+ErrorValue load_png(const char *path, unsigned char **image) {
 
   char *name = malloc(256);
   char *extension = malloc(256);
@@ -38,11 +44,9 @@ struct ErrorValue load_png(const char *path, unsigned char **image) {
     return (struct ErrorValue){1, "File passed is not a png"};
   }
 
-  printf("is png\n");
-
   unsigned width, height;
   unsigned error = lodepng_decode32_file(image, &width, &height, path);
-
+  printf("decoded\n");
   if (error)
     return (struct ErrorValue){1, lodepng_error_text(error)};
 
@@ -55,10 +59,29 @@ struct ErrorValue load_png(const char *path, unsigned char **image) {
 // no safety because i got big balls and ye!
 void write_pixels(unsigned char *src, unsigned char *dst, unsigned x,
                   unsigned y, unsigned height, unsigned width) {
-  printf("riting pixels\n");
   for (int row = 0; row < height; row++) {
     int calc = 4 * ((y + row) * EXPECTED_WIDTH + x);
     memcpy(dst + calc, src + calc, width * 4);
   }
-  printf("finished writing pixels\n");
+}
+
+// src_width could instead just used EXPECTED_WIDTH?
+unsigned char *slice_pixels(unsigned char *src, unsigned x, unsigned y,
+                            unsigned src_width, unsigned slice_width,
+                            unsigned slice_height) {
+  unsigned char *slice =
+      (unsigned char *)malloc(slice_width * slice_height * 4);
+
+  if (!slice) {
+    printf("Failed to allocate memory for slice_pixels\n");
+    return NULL;
+  }
+
+  for (int row = 0; row < slice_height; row++) {
+    unsigned s_offset = 4 * ((y + row) * src_width + x);
+    unsigned d_offset = 4 * (row * slice_width);
+    memcpy(slice + d_offset, src + s_offset, slice_width * 4);
+  }
+
+  return slice;
 }

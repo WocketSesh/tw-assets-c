@@ -3,6 +3,14 @@
 #include <stdio.h>
 #include <stdlib.h>
 
+void create_error(ErrorValue *err, const char *msg) {
+  if (err == NULL)
+    return;
+
+  err->did_error = 1;
+  err->error_message = msg;
+}
+
 ErrorValue array_init(BaseArray *base, size_t size) {
   base->length = 0;
   base->allocated_length = 0;
@@ -32,6 +40,8 @@ ErrorValue array_allocate(BaseArray *base) {
   return (struct ErrorValue){0};
 }
 
+int array_length(BaseArray *base) { return base == NULL ? -1 : base->length; }
+
 ErrorValue array_push(BaseArray *base, void *content) {
   if (content == NULL) {
     return (ErrorValue){1, "Attempting to push NULL to array"};
@@ -56,25 +66,16 @@ int array_needs_allocation(struct BaseArray *base) {
 void *array_get(BaseArray *base, int index, ErrorValue *err) {
 
   if (index >= base->length) {
-    if (err != NULL) {
-      err->did_error = 1;
-      err->error_message = "Attempt to out of bounds index";
-    }
+    create_error(err, "Attempt to out of bounds index");
     return NULL;
   }
 
   void *at_index = base->contents[index];
 
   if (at_index == NULL) {
-    if (err != NULL) {
-      err->did_error = 1;
-      err->error_message = "Value at index is NULL";
-    }
+    create_error(err, "Value at index is NULL");
     return NULL;
   }
-
-  if (err != NULL)
-    err->did_error = 0;
 
   return at_index;
 }

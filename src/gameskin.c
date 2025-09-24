@@ -1,7 +1,8 @@
-#include "gameskin.h"
-#include "gameskinpart.h"
 #include "helpers.h"
+#include "lodepng.h"
 #include "png_handle.h"
+#include "stdio.h"
+#include "tw_assets.h"
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
@@ -17,7 +18,7 @@ ErrorValue gameskin_copy_part_from(GameSkin *src, GameSkin *dst,
     return (struct ErrorValue){1, "Either src or dst is NULL"};
   }
 
-  GameSkinPartPosition pos = get_part_position(part);
+  GameSkinPartPosition pos = gameskin_get_part_position(part);
 
   write_pixels(src->pixels, dst->pixels, pos.x, pos.y, pos.height, pos.width);
 
@@ -28,11 +29,82 @@ ErrorValue gameskin_save(struct GameSkin *gameskin) {
   lodepng_encode32_file(gameskin->path, gameskin->pixels, EXPECTED_WIDTH,
                         EXPECTED_HEIGHT);
 }
+unsigned char *gameskin_get_part_pixels(GameSkin *gameskin, GameSkinPartID part,
+                                        unsigned *height, unsigned *width,
+                                        ErrorValue *err) {
+
+  if (gameskin == NULL) {
+    create_error(err, "Gameskin is NULL");
+    return NULL;
+  }
+
+  GameSkinPartPosition pos = gameskin_get_part_position(part);
+
+  if (height != NULL)
+    *height = pos.height;
+
+  if (width != NULL)
+    *width = pos.width;
+
+  if (pos.height == 0) {
+    create_error(err, "Invalid GameSkinPartID Provided");
+    return NULL;
+  }
+
+  return slice_pixels(gameskin->pixels, pos.x, pos.y, EXPECTED_WIDTH, pos.width,
+                      pos.height);
+}
+
+int gameskin_array_length(BaseArray *base) { return array_length(base); }
+
+ErrorValue gameskin_free(GameSkin *gs) {
+  if (gs == NULL)
+    return (ErrorValue){1, "Gameskin is NULL"};
+  if (gs->name != NULL)
+    free(gs->name);
+  if (gs->pixels != NULL)
+    free(gs->pixels);
+  free(gs);
+
+  return (ErrorValue){0};
+}
+
+ErrorValue gameskin_save_part(GameSkin *gameskin, GameSkinPartID part,
+                              const char *path) {
+  struct ErrorValue err = {0};
+  unsigned h, w;
+  unsigned char *pixels =
+      gameskin_get_part_pixels(gameskin, part, &h, &w, &err);
+
+  if (err.did_error) {
+    return err;
+  }
+
+  int error = lodepng_encode32_file(path, pixels, w, h);
+
+  if (error) {
+    create_error(&err, lodepng_error_text(error));
+    return err;
+  }
+
+  return (ErrorValue){0};
+}
 
 ErrorValue gameskin_from_path(const char *path, GameSkin *gameskin) {
   load_png(path, &gameskin->pixels);
   get_name_extension(path, gameskin->name, NULL);
   gameskin->path = path;
+
+  return (ErrorValue){0};
+}
+
+// TODO: make safey
+ErrorValue gameskin_init(GameSkin **gs) {
+  *gs = malloc(sizeof(struct GameSkin));
+
+  // allocate for name here so we can pass it to get_name_extension, could cause
+  // issues but fuck it big balls
+  (*gs)->name = malloc(256);
 
   return (ErrorValue){0};
 }
@@ -48,11 +120,8 @@ ErrorValue gameskin_array_push(BaseArray *base, GameSkin *gameskin) {
 }
 
 ErrorValue gameskin_array_remove(BaseArray *base, int index, int free_memory) {
-  if (free_memory) {
-    GameSkin *s = gameskin_array_get(base, index, NULL);
-    if (s != NULL)
-      free(s->pixels);
-  }
+  if (free_memory)
+    gameskin_free(gameskin_array_get(base, index, NULL));
 
   return array_remove(base, index, free_memory);
 }
