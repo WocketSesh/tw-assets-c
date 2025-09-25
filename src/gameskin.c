@@ -28,6 +28,8 @@ ErrorValue gameskin_copy_part_from(GameSkin *src, GameSkin *dst,
 ErrorValue gameskin_save(struct GameSkin *gameskin) {
   lodepng_encode32_file(gameskin->path, gameskin->pixels, EXPECTED_WIDTH,
                         EXPECTED_HEIGHT);
+
+  return (ErrorValue){0};
 }
 unsigned char *gameskin_get_part_pixels(GameSkin *gameskin, GameSkinPartID part,
                                         unsigned *height, unsigned *width,
@@ -91,8 +93,7 @@ ErrorValue gameskin_save_part(GameSkin *gameskin, GameSkinPartID part,
 }
 
 ErrorValue gameskin_from_path(const char *path, GameSkin *gameskin) {
-  load_png(path, &gameskin->pixels);
-  get_name_extension(path, gameskin->name, NULL);
+  load_png(path, &gameskin->pixels, gameskin->name);
   gameskin->path = path;
 
   return (ErrorValue){0};
@@ -123,12 +124,12 @@ ErrorValue gameskin_array_remove(BaseArray *base, int index, int free_memory) {
   if (free_memory)
     gameskin_free(gameskin_array_get(base, index, NULL));
 
-  return array_remove(base, index, free_memory);
+  return array_remove(base, index, 0);
 }
 
-ErrorValue gameskin_array_clear(BaseArray *arr) {
+ErrorValue gameskin_array_clear(BaseArray *arr, int free_memory) {
   while (arr->length > 0) {
-    gameskin_array_remove(arr, 0, 1);
+    gameskin_array_remove(arr, 0, free_memory);
   }
 
   return (ErrorValue){0};

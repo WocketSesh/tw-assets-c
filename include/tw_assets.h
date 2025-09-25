@@ -2,10 +2,13 @@
 #ifndef TW_ASSETS_H
 #define TW_ASSETS_H
 
-#include "helpers.h"
-
 // Helpers
 typedef struct BaseArray BaseArray;
+
+typedef struct ErrorValue {
+  int did_error;
+  const char *error_message;
+} ErrorValue;
 
 // GameSkinPart
 #define NUM_SKIN_PARTS 48
@@ -85,7 +88,7 @@ ErrorValue gameskin_array_push(BaseArray *base, GameSkin *gameskin);
 ErrorValue gameskin_array_push_all(BaseArray *base, GameSkin **gameskin,
                                    int count);
 ErrorValue gameskin_array_remove(BaseArray *base, int index, int free_memory);
-ErrorValue gameskin_array_clear(BaseArray *arr);
+ErrorValue gameskin_array_clear(BaseArray *arr, int free_memory);
 GameSkin *gameskin_array_get(BaseArray *base, int index, ErrorValue *err);
 GameSkin *gameskin_array_find(BaseArray *base, const char *name,
                               ErrorValue *err);

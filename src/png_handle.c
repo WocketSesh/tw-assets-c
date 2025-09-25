@@ -20,7 +20,6 @@ void get_name_extension(const char *path, char *name, char *extension) {
     if (name != NULL)
       strncpy_s(name, 256, base, name_len);
 
-    printf("set name?\n");
     name[name_len] = '\0';
 
     if (extension != NULL)
@@ -33,20 +32,21 @@ void get_name_extension(const char *path, char *name, char *extension) {
   }
 }
 
-ErrorValue load_png(const char *path, unsigned char **image) {
-
-  char *name = malloc(256);
+ErrorValue load_png(const char *path, unsigned char **image, char *name) {
   char *extension = malloc(256);
 
   get_name_extension(path, name, extension);
 
-  if (strcmp(extension, "png") != 0) {
+  int is_png = strcmp(extension, "png") == 0;
+  free(extension);
+
+  if (!is_png) {
     return (struct ErrorValue){1, "File passed is not a png"};
   }
 
   unsigned width, height;
   unsigned error = lodepng_decode32_file(image, &width, &height, path);
-  printf("decoded\n");
+
   if (error)
     return (struct ErrorValue){1, lodepng_error_text(error)};
 

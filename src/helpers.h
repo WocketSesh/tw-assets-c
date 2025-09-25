@@ -1,6 +1,7 @@
 #ifndef HELPERS_H
 #define HELPERS_H
 
+#include "tw_assets.h"
 #include <stddef.h>
 
 typedef struct BaseArray {
@@ -9,11 +10,6 @@ typedef struct BaseArray {
   size_t size;
   void **contents;
 } BaseArray;
-
-typedef struct ErrorValue {
-  int did_error;
-  const char *error_message;
-} ErrorValue;
 
 int array_length(BaseArray *base);
 ErrorValue array_init(BaseArray *base, size_t size);
