@@ -1,4 +1,5 @@
 .clangd
+.cache
 build
 test
 compile_commands.json
