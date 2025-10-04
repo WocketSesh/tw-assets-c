@@ -12,7 +12,7 @@ typedef struct BaseArray {
 } BaseArray;
 
 int array_length(BaseArray *base);
-ErrorValue array_init(BaseArray *base, size_t size);
+ErrorValue array_init(BaseArray **base, size_t size);
 ErrorValue array_allocate(BaseArray *base);
 ErrorValue array_push(BaseArray *base, void *content);
 void *array_get(BaseArray *base, int index, ErrorValue *err);

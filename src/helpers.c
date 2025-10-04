@@ -11,14 +11,23 @@ void create_error(ErrorValue *err, const char *msg) {
   err->error_message = msg;
 }
 
-ErrorValue array_init(BaseArray *base, size_t size) {
-  base->length = 0;
-  base->allocated_length = 0;
-  base->size = size;
+ErrorValue array_init(BaseArray **base, size_t size) {
+  *base = malloc(sizeof(BaseArray));
 
-  base->contents = malloc(size * 2);
+  if (*base == NULL) {
+    ErrorValue err;
+    err.did_error = 1;
+    err.error_message = "Error allocating memory for BaseArray";
+    return err;
+  }
 
-  if (base->contents == NULL) {
+  (*base)->length = 0;
+  (*base)->allocated_length = 0;
+  (*base)->size = size;
+
+  (*base)->contents = malloc(size * 2);
+
+  if ((*base)->contents == NULL) {
     return (struct ErrorValue){1, "Error Allocating Memory"};
   }
 

@@ -80,10 +80,34 @@ typedef struct GameSkin {
   char *name;
   char *path;
   unsigned char *pixels;
+  unsigned height, width;
 } GameSkin;
 
+// tw_assets
+
+typedef struct TWAssets {
+  int expected_width;
+  int expected_height;
+
+  int logging_enabled;
+
+  const char *save_folder;
+
+  BaseArray *p_gameskins;
+} TWAssets;
+
+TWAssets init_tw_assets(int expected_width, int expected_height,
+                        const char *save_folder, int logging_enabled);
+ErrorValue twa_gameskin_copy_part_from(TWAssets *twa, const char *src,
+                                       const char *dst, GameSkinPartID part);
+ErrorValue twa_gameskin_from_path(TWAssets *twa, const char *path);
+ErrorValue twa_gameskin_from_name(TWAssets *twa, const char *name);
+ErrorValue twa_clone_gameskin(TWAssets *twa, const char *name,
+                              const char *new_name);
+ErrorValue twa_gameskin_save(TWAssets *twa, const char *name);
+
 // Array
-ErrorValue gameskin_array_init(BaseArray *base);
+ErrorValue gameskin_array_init(BaseArray **base);
 ErrorValue gameskin_array_push(BaseArray *base, GameSkin *gameskin);
 ErrorValue gameskin_array_push_all(BaseArray *base, GameSkin **gameskin,
                                    int count);

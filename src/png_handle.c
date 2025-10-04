@@ -32,7 +32,8 @@ void get_name_extension(const char *path, char *name, char *extension) {
   }
 }
 
-ErrorValue load_png(const char *path, unsigned char **image, char *name) {
+ErrorValue load_png(const char *path, unsigned char **image, char *name,
+                    unsigned *height, unsigned *width) {
   char *extension = malloc(256);
 
   get_name_extension(path, name, extension);
@@ -44,14 +45,10 @@ ErrorValue load_png(const char *path, unsigned char **image, char *name) {
     return (struct ErrorValue){1, "File passed is not a png"};
   }
 
-  unsigned width, height;
-  unsigned error = lodepng_decode32_file(image, &width, &height, path);
+  unsigned error = lodepng_decode32_file(image, width, height, path);
 
   if (error)
     return (struct ErrorValue){1, lodepng_error_text(error)};
-
-  if (width != EXPECTED_WIDTH || height != EXPECTED_HEIGHT)
-    return (struct ErrorValue){1, "Unexpected image size"};
 
   return (struct ErrorValue){0};
 }

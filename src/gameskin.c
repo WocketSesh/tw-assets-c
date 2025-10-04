@@ -1,13 +1,12 @@
 #include "helpers.h"
 #include "lodepng.h"
 #include "png_handle.h"
-#include "stdio.h"
 #include "tw_assets.h"
 #include <stddef.h>
 #include <stdlib.h>
 #include <string.h>
 
-ErrorValue gameskin_array_init(BaseArray *base) {
+ErrorValue gameskin_array_init(BaseArray **base) {
   return array_init(base, sizeof(GameSkin));
 }
 
@@ -18,6 +17,10 @@ ErrorValue gameskin_copy_part_from(GameSkin *src, GameSkin *dst,
     return (struct ErrorValue){1, "Either src or dst is NULL"};
   }
 
+  if (src->height != dst->height) {
+    return (struct ErrorValue){1, "Source and Destination height do not match"};
+  }
+
   GameSkinPartPosition pos = gameskin_get_part_position(part);
 
   write_pixels(src->pixels, dst->pixels, pos.x, pos.y, pos.height, pos.width);
@@ -25,16 +28,19 @@ ErrorValue gameskin_copy_part_from(GameSkin *src, GameSkin *dst,
   return (ErrorValue){0};
 }
 
-ErrorValue gameskin_save(struct GameSkin *gameskin) {
-  lodepng_encode32_file(gameskin->path, gameskin->pixels, EXPECTED_WIDTH,
-                        EXPECTED_HEIGHT);
+ErrorValue gameskin_save(GameSkin *gameskin) {
+  unsigned err = lodepng_encode32_file(gameskin->path, gameskin->pixels,
+                                       EXPECTED_WIDTH, EXPECTED_HEIGHT);
 
-  return (ErrorValue){0};
+  if (!err)
+    return (ErrorValue){0};
+
+  return (ErrorValue){1, lodepng_error_text(err)};
 }
+
 unsigned char *gameskin_get_part_pixels(GameSkin *gameskin, GameSkinPartID part,
                                         unsigned *height, unsigned *width,
                                         ErrorValue *err) {
-
   if (gameskin == NULL) {
     create_error(err, "Gameskin is NULL");
     return NULL;
@@ -92,8 +98,10 @@ ErrorValue gameskin_save_part(GameSkin *gameskin, GameSkinPartID part,
   return (ErrorValue){0};
 }
 
+// Load a gameskin from the spicified path
 ErrorValue gameskin_from_path(const char *path, GameSkin *gameskin) {
-  load_png(path, &gameskin->pixels, gameskin->name);
+  load_png(path, &gameskin->pixels, gameskin->name, &gameskin->height,
+           &gameskin->width);
   gameskin->path = path;
 
   return (ErrorValue){0};
@@ -106,7 +114,6 @@ ErrorValue gameskin_init(GameSkin **gs) {
   // allocate for name here so we can pass it to get_name_extension, could cause
   // issues but fuck it big balls
   (*gs)->name = malloc(256);
-
   return (ErrorValue){0};
 }
 
