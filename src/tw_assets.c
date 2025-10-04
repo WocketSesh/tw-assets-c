@@ -13,7 +13,7 @@ TWAssets init_tw_assets(int expceted_width, int expected_height,
   twa.expected_width = expceted_width;
   twa.expected_height = expected_height;
 
-  BaseArray *arr = malloc(sizeof(BaseArray));
+  BaseArray *arr;
   ErrorValue err = gameskin_array_init(&arr);
 
   if (err.did_error) {
