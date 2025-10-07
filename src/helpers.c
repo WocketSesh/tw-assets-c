@@ -1,7 +1,10 @@
 #include "helpers.h"
+#include "tw_assets.h"
+#include <stdarg.h>
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
 
 void create_error(ErrorValue *err, const char *msg) {
   if (err == NULL)
@@ -9,6 +12,65 @@ void create_error(ErrorValue *err, const char *msg) {
 
   err->did_error = 1;
   err->error_message = msg;
+}
+
+String string_init(const char *str, ErrorValue *err) {
+  size_t buf_size = strlen(str) + 1;
+  String string = malloc(buf_size);
+
+  if (string == NULL) {
+    create_error(err, "Error allocating for string");
+    return NULL;
+  }
+
+  memcpy_s(string, buf_size, str, buf_size);
+  return string;
+}
+
+ErrorValue string_concat(String *string, int count, ...) {
+  size_t str_length = strlen(*string);
+  size_t concat_length = 0;
+
+  va_list args;
+  va_start(args, count);
+
+  for (int i = 0; i < count; i++) {
+    const char *str = va_arg(args, const char *);
+    if (str == NULL) {
+      va_end(args);
+      return (ErrorValue){1, "Attempt to concat NULL str"};
+    }
+    concat_length += strlen(str);
+  }
+
+  va_end(args);
+
+  size_t buf_size = str_length + concat_length + 1;
+
+  String tmp = realloc(*string, buf_size);
+
+  if (tmp == NULL) {
+    return (ErrorValue){1, "Error reallocating for string"};
+  }
+
+  va_start(args, count);
+
+  size_t offset = str_length;
+
+  for (int i = 0; i < count; i++) {
+    const char *str = va_arg(args, const char *);
+    size_t length = strlen(str);
+    memcpy(tmp + offset, str, length);
+    offset += length;
+  }
+
+  tmp[offset] = '\0';
+
+  va_end(args);
+
+  *string = tmp;
+
+  return (ErrorValue){0};
 }
 
 ErrorValue array_init(BaseArray **base, size_t size) {

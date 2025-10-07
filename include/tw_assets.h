@@ -4,11 +4,15 @@
 
 // Helpers
 typedef struct BaseArray BaseArray;
+typedef char *String;
 
 typedef struct ErrorValue {
   int did_error;
   const char *error_message;
 } ErrorValue;
+
+ErrorValue string_concat(String *string, int count, ...);
+String string_init(const char *str, ErrorValue *err);
 
 // GameSkinPart
 #define NUM_SKIN_PARTS 48
@@ -77,8 +81,8 @@ GameSkinPartPosition gameskin_get_part_position(GameSkinPartID part);
 #define GAME_SKIN_PARTS 10
 
 typedef struct GameSkin {
-  char *name;
-  char *path;
+  String name;
+  String path;
   unsigned char *pixels;
   unsigned height, width;
 } GameSkin;

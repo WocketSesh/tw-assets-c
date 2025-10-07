@@ -42,6 +42,8 @@ ErrorValue twa_gameskin_from_path(TWAssets *twa, const char *path) {
     return err;
   }
 
+  free(path); // im pretty sure we free here, if nothing breaks then woo
+
   return gameskin_array_push(twa->p_gameskins, gs);
 }
 
@@ -52,17 +54,20 @@ ErrorValue twa_gameskin_save(TWAssets *twa, const char *name) {
 // Uses the base path provided while initializing TWA and appends the given name
 // to load a gameskin
 ErrorValue twa_gameskin_from_name(TWAssets *twa, const char *name) {
-  size_t buf_size = strlen(name) + strlen(twa->save_folder) + 2;
 
-  char *path = malloc(buf_size);
+  ErrorValue str_err;
+  String path = string_init(twa->save_folder, &str_err);
 
-  if (path == NULL) {
-    ErrorValue err;
-    create_error(&err, "Error allocating for path");
-    return err;
+  if (str_err.did_error) {
+    return str_err;
   }
 
-  snprintf(path, buf_size, "%s/%s", twa->save_folder, name);
+  ErrorValue con_err = string_concat(&path, 1, name);
+
+  if (con_err.did_error) {
+    free(path);
+    return con_err;
+  }
 
   return twa_gameskin_from_path(twa, path);
 }
@@ -86,11 +91,21 @@ ErrorValue twa_clone_gameskin(TWAssets *twa, const char *name,
   GameSkin *gs;
   gameskin_init(&gs);
 
-  size_t buf_size = strlen(twa->save_folder) + strlen(new_name) +
-                    6; // +1 for '/' + 1 for null term + 4 for .png
-  char *full_path = malloc(buf_size);
+  ErrorValue str_err;
+  String full_path = string_init(twa->save_folder, &str_err);
 
-  snprintf(full_path, buf_size, "%s/%s.png", twa->save_folder, new_name);
+  if (str_err.did_error) {
+    free(gs);
+    return str_err;
+  }
+
+  ErrorValue concat_err = string_concat(&full_path, 3, "/", new_name, ".png");
+
+  if (concat_err.did_error) {
+    free(gs);
+    free(full_path);
+    return str_err;
+  }
 
   printf("set full path to: %s\n", full_path);
   gs->path = full_path;

@@ -3,6 +3,7 @@
 #include "png_handle.h"
 #include "tw_assets.h"
 #include <stddef.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
@@ -30,7 +31,7 @@ ErrorValue gameskin_copy_part_from(GameSkin *src, GameSkin *dst,
 
 ErrorValue gameskin_save(GameSkin *gameskin) {
   unsigned err = lodepng_encode32_file(gameskin->path, gameskin->pixels,
-                                       EXPECTED_WIDTH, EXPECTED_HEIGHT);
+                                       gameskin->width, gameskin->height);
 
   if (!err)
     return (ErrorValue){0};
@@ -70,6 +71,8 @@ ErrorValue gameskin_free(GameSkin *gs) {
     return (ErrorValue){1, "Gameskin is NULL"};
   if (gs->name != NULL)
     free(gs->name);
+  if (gs->path != NULL)
+    free(gs->path);
   if (gs->pixels != NULL)
     free(gs->pixels);
   free(gs);
@@ -100,11 +103,32 @@ ErrorValue gameskin_save_part(GameSkin *gameskin, GameSkinPartID part,
 
 // Load a gameskin from the spicified path
 ErrorValue gameskin_from_path(const char *path, GameSkin *gameskin) {
-  load_png(path, &gameskin->pixels, gameskin->name, &gameskin->height,
-           &gameskin->width);
-  gameskin->path = path;
+  char *name = malloc(256);
 
-  return (ErrorValue){0};
+  if (name == NULL) {
+    return (ErrorValue){1, "Error allocating for name"};
+  }
+
+  load_png(path, &gameskin->pixels, name, &gameskin->height, &gameskin->width);
+
+  ErrorValue str_err;
+  gameskin->name = string_init(name, &str_err);
+  free(name);
+
+  if (str_err.did_error) {
+    // no cleanup or return and just balls to the walls
+    printf("Error: %s\n", str_err.error_message);
+  }
+
+  // Should always be NULL?, but just incase
+  if (gameskin->path != NULL) {
+    free(gameskin->path);
+  }
+  // Should probably do some error handling here?
+  ErrorValue err;
+  gameskin->path = string_init(path, &err);
+
+  return err;
 }
 
 // TODO: make safey
@@ -113,7 +137,8 @@ ErrorValue gameskin_init(GameSkin **gs) {
 
   // allocate for name here so we can pass it to get_name_extension, could cause
   // issues but fuck it big balls
-  (*gs)->name = malloc(256);
+  // Now allocate for name instead when using get_name_extension ?
+  // (*gs)->name = malloc(256);
   return (ErrorValue){0};
 }
 

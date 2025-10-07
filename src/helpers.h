@@ -11,6 +11,8 @@ typedef struct BaseArray {
   void **contents;
 } BaseArray;
 
+typedef char *String;
+
 int array_length(BaseArray *base);
 ErrorValue array_init(BaseArray **base, size_t size);
 ErrorValue array_allocate(BaseArray *base);
